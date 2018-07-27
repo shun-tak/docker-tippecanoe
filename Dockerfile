@@ -1,21 +1,20 @@
-FROM alpine:3.4
-MAINTAINER Jake Skeates <jake@skeat.es>
+FROM alpine:3.8
 
-ARG TIPPECANOE_RELEASE="1.14.4"
+MAINTAINER shun-tak <shun.tak221@gmail.com>
 
-RUN apk add --no-cache sudo git g++ make libgcc libstdc++ sqlite-libs sqlite-dev zlib-dev bash \
- && addgroup sudo && adduser -G sudo -D -H tippecanoe && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
- && cd /root \
- && git clone https://github.com/mapbox/tippecanoe.git tippecanoe \
- && cd tippecanoe \
- && git checkout tags/$TIPPECANOE_RELEASE \
- && cd /root/tippecanoe \
- && make \
+ARG TIPPECANOE_RELEASE="1.30.1"
+
+WORKDIR /root
+
+RUN apk add --no-cache g++ make bash libgcc libstdc++ sqlite-libs sqlite-dev zlib-dev \
+ && wget https://github.com/mapbox/tippecanoe/archive/${TIPPECANOE_RELEASE}.tar.gz \
+ && tar -zxf ${TIPPECANOE_RELEASE}.tar.gz \
+ && rm ${TIPPECANOE_RELEASE}.tar.gz \
+ && cd tippecanoe-${TIPPECANOE_RELEASE} \
+ && make -j`nproc` \
  && make install \
  && cd /root \
- && rm -rf /root/tippecanoe \
- && apk del git g++ make sqlite-dev
+ && rm -rf /root/tippecanoe-${TIPPECANOE_RELEASE} \
+ && apk del g++ make bash sqlite-dev
 
-USER tippecanoe
-WORKDIR /home/tippecanoe
-ENTRYPOINT /bin/bash
+CMD tippecanoe -v
